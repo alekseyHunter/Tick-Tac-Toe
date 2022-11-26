@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:aapt="http://schemas.android.com/aapt">
+    <item>
+        <shape android:shape="rectangle">
+            <size android:height="46dp" android:width="46dp"/>
+            <solid android:color="@color/white"/>
+            <stroke android:width="4dp" android:color="@color/grey"/>
+            <corners android:radius="8dp"/>
+        </shape>
+    </item>
+    <item android:gravity="center" android:height="36dp" android:width="36dp" android:drawable="@drawable/ic_check"/>
+</layer-list>

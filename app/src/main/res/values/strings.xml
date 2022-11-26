@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Мои Крестики-Нолики</string>
+    <string name="dialog_continue_game">Продолжить игру</string>
+    <string name="dialog_exit">Сохранить и выйти</string>
+    <string name="dialog_settings">Настройки</string>
+    <string name="dialog_status_draw">Вы сыграли в ничью!</string>
+    <string name="dialog_status_lose">Вы проиграли!</string>
+    <string name="dialog_status_win">Вы выиграли!</string>
+
+    <string name="popup_close">ОК</string>
+    <string name="popup_title">Меню</string>
+    <string name="preference_file_key">my.tic_tac_toe.file_key</string>
+    <string name="rules_diagonal">Ряд по диагонали</string>
+    <string name="rules_horizontal">Ряд по горизонтали</string>
+    <string name="rules_vertical">Ряд по вертикали</string>
+    <string name="search_menu_title">Search</string>
+    <string name="settings_difficulty">Сложность</string>
+    <string name="settings_rules">Правила игры</string>
+    <string name="settings_sound">Звук</string>
+    <string name="settings_to_back">Вернуться</string>
+    <string name="title_continue_game">Продолжить игру</string>
+    <string name="title_new_game">Новая игра</string>
+    <string name="title_settings">Настройки</string>
+
+    <string name="new_game">Новая игра</string>
+    <string name="continue_game">Продолжить игру</string>
+    <string name="settings">Настройки</string>
+
+    <string-array name="level">
+        <item>ЛЕГКО</item>
+        <item>НОРМАЛЬНО</item>
+        <item>СЛОЖНО</item>
+    </string-array>
+</resources>
