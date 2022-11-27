@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
 
-    <style name="Theme.MyTickTacToe" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="Theme.MyTickTacToe" parent="Theme.AppCompat.NoActionBar">
         <item name="android:statusBarColor">@color/grey</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorOnSecondary">@color/black</item>

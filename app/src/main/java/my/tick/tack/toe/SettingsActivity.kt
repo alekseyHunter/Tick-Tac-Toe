@@ -132,6 +132,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         settingsBinding.toBack.setOnClickListener {
+            setResult(RESULT_OK)
             onBackPressed()
         }
 
@@ -143,6 +144,7 @@ class SettingsActivity : AppCompatActivity() {
             putInt(PREF_SOUND, volume)
             apply()
         }
+        setResult(RESULT_OK)
     }
 
     private fun updateLevel(level: Int){
@@ -150,6 +152,7 @@ class SettingsActivity : AppCompatActivity() {
             putInt(PREF_LEVEL, level)
             apply()
         }
+        setResult(RESULT_OK)
     }
 
     private fun updateRules(rules: Int){
@@ -157,6 +160,7 @@ class SettingsActivity : AppCompatActivity() {
             putInt(PREF_RULES, rules)
             apply()
         }
+        setResult(RESULT_OK)
     }
 
     private fun getCurrentSettings(): SettingsInfo {

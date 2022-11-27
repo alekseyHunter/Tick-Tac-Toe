@@ -14,7 +14,6 @@
     <string name="rules_diagonal">Ряд по диагонали</string>
     <string name="rules_horizontal">Ряд по горизонтали</string>
     <string name="rules_vertical">Ряд по вертикали</string>
-    <string name="search_menu_title">Search</string>
     <string name="settings_difficulty">Сложность</string>
     <string name="settings_rules">Правила игры</string>
     <string name="settings_sound">Звук</string>
@@ -22,10 +21,6 @@
     <string name="title_continue_game">Продолжить игру</string>
     <string name="title_new_game">Новая игра</string>
     <string name="title_settings">Настройки</string>
-
-    <string name="new_game">Новая игра</string>
-    <string name="continue_game">Продолжить игру</string>
-    <string name="settings">Настройки</string>
 
     <string-array name="level">
         <item>ЛЕГКО</item>

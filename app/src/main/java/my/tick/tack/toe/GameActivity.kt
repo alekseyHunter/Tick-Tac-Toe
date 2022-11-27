@@ -1,7 +1,6 @@
 package my.tick.tack.toe
 
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -22,8 +21,6 @@ class GameActivity : AppCompatActivity() {
 
     private lateinit var mediaPlayer: MediaPlayer
 
-    private var elapsedMillis = 0L
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -38,39 +35,39 @@ class GameActivity : AppCompatActivity() {
         }
 
         binding.cell11.setOnClickListener {
-            nextStepToUser(0, 0)
+            makeStepToUser(0, 0)
         }
 
         binding.cell12.setOnClickListener {
-            nextStepToUser(0, 1)
+            makeStepToUser(0, 1)
         }
 
         binding.cell13.setOnClickListener {
-            nextStepToUser(0, 2)
+            makeStepToUser(0, 2)
         }
 
         binding.cell21.setOnClickListener {
-            nextStepToUser(1, 0)
+            makeStepToUser(1, 0)
         }
 
         binding.cell22.setOnClickListener {
-            nextStepToUser(1, 1)
+            makeStepToUser(1, 1)
         }
 
         binding.cell23.setOnClickListener {
-            nextStepToUser(1, 2)
+            makeStepToUser(1, 2)
         }
 
         binding.cell31.setOnClickListener {
-            nextStepToUser(2, 0)
+            makeStepToUser(2, 0)
         }
 
         binding.cell32.setOnClickListener {
-            nextStepToUser(2, 1)
+            makeStepToUser(2, 1)
         }
 
         binding.cell33.setOnClickListener {
-            nextStepToUser(2, 2)
+            makeStepToUser(2, 2)
         }
 
         setContentView(binding.root)
@@ -78,7 +75,7 @@ class GameActivity : AppCompatActivity() {
         val time = intent.getLongExtra(EXTRA_TIME, 0L)
         val gameField = intent.getStringExtra(EXTRA_GAME_FIELD)
 
-        if(gameField != null && time != 0L && gameField != ""){
+        if (gameField != null && time != 0L && gameField != "") {
             restartGame(time, gameField)
         } else {
             initGameField()
@@ -86,6 +83,8 @@ class GameActivity : AppCompatActivity() {
 
         mediaPlayer = MediaPlayer.create(this, R.raw.test)
         mediaPlayer.isLooping = true
+        val settingsInfo = getCurrentSettings()
+        setVolumeMediaPlayer(settingsInfo.sound)
 
         binding.chronometer.start()
         mediaPlayer.start()
@@ -100,7 +99,27 @@ class GameActivity : AppCompatActivity() {
         super.onStop()
         mediaPlayer.release()
     }
-    
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == POPUP_MENU) {
+            if (resultCode == RESULT_OK) {
+                mediaPlayer = MediaPlayer.create(this, R.raw.test)
+                mediaPlayer.isLooping = true
+                val settingsInfo = getCurrentSettings()
+                setVolumeMediaPlayer(settingsInfo.sound)
+
+                binding.chronometer.start()
+                mediaPlayer.start()
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun setVolumeMediaPlayer(soundValue: Int){
+        val volume = soundValue / 100.0
+        mediaPlayer.setVolume(volume.toFloat(), volume.toFloat())
+    }
+
     private fun restartGame(time: Long, gameField: String) {
         binding.chronometer.base = SystemClock.elapsedRealtime() - time
 
@@ -108,14 +127,14 @@ class GameActivity : AppCompatActivity() {
 
         val rows = gameField.split("\n")
 
-        for(row in rows){
+        for (row in rows) {
             val columns = row.split(";")
             this.gameField += columns.toTypedArray()
         }
 
-        this.gameField.forEachIndexed{ i, rows ->
-            rows.forEachIndexed { j, column ->
-                makeGameFieldUI("$i$j", column)
+        this.gameField.forEachIndexed { indexRow, columns ->
+            columns.forEachIndexed { indexColumn, cell ->
+                makeGameFieldUI("$indexRow$indexColumn", cell)
             }
         }
     }
@@ -126,15 +145,15 @@ class GameActivity : AppCompatActivity() {
         return tmpArray.joinToString(separator = "\n")
     }
 
-    private fun saveGame(time: Long, gameField: String){
-        getSharedPreferences("game", MODE_PRIVATE).edit().apply{
+    private fun saveGame(time: Long, gameField: String) {
+        getSharedPreferences("game", MODE_PRIVATE).edit().apply {
             putLong("time", time)
             putString("gameField", gameField)
             apply()
         }
     }
 
-    private fun initGameField(){
+    private fun initGameField() {
         gameField = arrayOf()
 
         for (i in 0..2) {
@@ -146,28 +165,39 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun nextStepToUser(row: Int, column: Int){
-        if(isEmptyField(row, column)) {
-            makeStep(row, column, "X")
+    private fun makeStepToUser(row: Int, column: Int) {
+        if (isEmptyField(row, column)) {
+            makeStep(row, column, PLAYER_SYMBOL)
 
-            val result = checkWin(row, column, "X")
-            if(result.status){
+            if (checkGameField(row, column, PLAYER_SYMBOL)) {
                 showGameStatus(STATUS_WIN_PLAYER)
-            }
+            } else if (!isFilledGameField()) {
+                val stepOfAI = makeStepToAI()
 
-            if(!isFilledGameField()){
-                nextStepToAI()
-            }
-            else {
+                if (checkGameField(stepOfAI.row, stepOfAI.column, BOT_SYMBOL)) {
+                    showGameStatus(STATUS_WIN_BOT)
+                } else if (isFilledGameField()) {
+                    showGameStatus(STATUS_DRAW)
+                }
+            } else {
                 showGameStatus(STATUS_DRAW)
             }
-        }
-        else{
+        } else {
             Toast.makeText(this, "Поле уже заполнено", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun nextStepToAI(){
+    private fun makeStepToAI(): CellGameField {
+        val settingsInfo = getCurrentSettings()
+        return when (settingsInfo.level) {
+            0 -> makeStepOfAIEasyLvl()
+            1 -> makeStepOfAIMediumLvl()
+            2 -> makeStepOfAIHardLvl()
+            else -> CellGameField(0, 0)
+        }
+    }
+
+    private fun makeStepOfAIEasyLvl(): CellGameField {
         var randomRow = 0
         var randomColumn = 0
 
@@ -176,32 +206,179 @@ class GameActivity : AppCompatActivity() {
             randomColumn = (0..2).random()
         } while (!isEmptyField(randomRow, randomColumn))
 
-        makeStep(randomRow, randomColumn, "0")
+        makeStep(randomRow, randomColumn, BOT_SYMBOL)
 
-        val result = checkWin(randomRow, randomColumn, "0")
-        if(result.status){
-            showGameStatus(STATUS_WIN_BOT)
+        return CellGameField(randomRow, randomColumn)
+    }
+
+    private fun makeStepOfAIMediumLvl(): CellGameField {
+        var bestScore = Double.NEGATIVE_INFINITY
+        var moveCell = CellGameField(0, 0)
+
+        var board = gameField.map { it.clone() }.toTypedArray()
+
+        board.forEachIndexed { indexRow, columns ->
+            columns.forEachIndexed { indexColumn, cell ->
+                if (board[indexRow][indexColumn] == " ") {
+                    board[indexRow][indexColumn] = BOT_SYMBOL
+                    val score = minimax(board, false)
+                    board[indexRow][indexColumn] = " "
+                    if (score > bestScore) {
+                        bestScore = score
+                        moveCell = CellGameField(indexRow, indexColumn)
+                    }
+                }
+            }
+        }
+
+        makeStep(moveCell.row, moveCell.column, BOT_SYMBOL)
+
+        return moveCell
+    }
+
+    private fun makeStepOfAIHardLvl(): CellGameField {
+        var bestScore = Double.NEGATIVE_INFINITY
+        var moveCell = CellGameField(0, 0)
+
+        var board = gameField.map { it.clone() }.toTypedArray()
+
+        board.forEachIndexed { indexRow, columns ->
+            columns.forEachIndexed { indexColumn, cell ->
+                if (board[indexRow][indexColumn] == " ") {
+                    board[indexRow][indexColumn] = BOT_SYMBOL
+                    val score = minimax(board, false)
+                    board[indexRow][indexColumn] = " "
+                    if (score > bestScore) {
+                        bestScore = score
+                        moveCell = CellGameField(indexRow, indexColumn)
+                    }
+                }
+            }
+        }
+
+        makeStep(moveCell.row, moveCell.column, BOT_SYMBOL)
+
+        return moveCell
+    }
+
+    private fun minimax(board: Array<Array<String>>, isMaximizing: Boolean): Double {
+        val result = checkWinner(board)
+        result?.let {
+            return scores[result]!!
+        }
+
+        if (isMaximizing) {
+            var bestScore = Double.NEGATIVE_INFINITY
+            board.forEachIndexed { indexRow, columns ->
+                columns.forEachIndexed { indexColumn, cell ->
+                    if (board[indexRow][indexColumn] == " ") {
+                        board[indexRow][indexColumn] = BOT_SYMBOL
+                        val score = minimax(board, false)
+                        board[indexRow][indexColumn] = " "
+                        if (score > bestScore) {
+                            bestScore = score
+                        }
+                    }
+                }
+            }
+            return bestScore
+        } else {
+            var bestScore = Double.POSITIVE_INFINITY
+            board.forEachIndexed { indexRow, columns ->
+                columns.forEachIndexed { indexColumn, cell ->
+                    if (board[indexRow][indexColumn] == " ") {
+                        board[indexRow][indexColumn] = PLAYER_SYMBOL
+                        val score = minimax(board, true)
+                        board[indexRow][indexColumn] = " "
+                        if (score < bestScore) {
+                            bestScore = score
+                        }
+                    }
+                }
+            }
+            return bestScore
         }
     }
 
-    private fun isEmptyField(row: Int, column: Int): Boolean{
+    private fun checkWinner(board: Array<Array<String>>): Int? {
+        var countRowsUser = 0
+        var countRowsAI = 0
+        var countLeftDiagonalUser = 0
+        var countLeftDiagonalAL = 0
+        var countRightDiagonalUser = 0
+        var countRightDiagonalAI = 0
+
+        board.forEachIndexed { indexRow, columns ->
+            if (columns.all { it == PLAYER_SYMBOL })
+                return STATUS_WIN_PLAYER
+            else if (columns.all { it == BOT_SYMBOL })
+                return STATUS_WIN_BOT
+
+            countRowsUser = 0
+            countRowsAI = 0
+
+            columns.forEachIndexed { indexColumn, cell ->
+                if (board[indexColumn][indexRow] == PLAYER_SYMBOL)
+                    countRowsUser++
+                else if (board[indexColumn][indexRow] == BOT_SYMBOL)
+                    countRowsAI++
+
+                if (indexRow == indexColumn && board[indexRow][indexColumn] == PLAYER_SYMBOL)
+                    countLeftDiagonalUser++
+                else if (indexRow == indexColumn && board[indexRow][indexColumn] == BOT_SYMBOL)
+                    countLeftDiagonalAL++
+
+                if (indexRow == 2 - indexColumn && board[indexRow][indexColumn] == PLAYER_SYMBOL)
+                    countRightDiagonalUser++
+                else if (indexRow == 2 - indexColumn && board[indexRow][indexColumn] == BOT_SYMBOL)
+                    countRightDiagonalAI++
+            }
+
+            if (countRowsUser == 3 || countLeftDiagonalUser == 3 || countRightDiagonalUser == 3)
+                return STATUS_WIN_PLAYER
+            else if (countRowsAI == 3 || countLeftDiagonalAL == 3 || countRightDiagonalAI == 3)
+                return STATUS_WIN_BOT
+        }
+
+        board.forEach {
+            if (it.find { it == " " } != null)
+                return null
+        }
+
+        return STATUS_DRAW
+    }
+
+    private fun getCurrentSettings(): SettingsActivity.SettingsInfo {
+        this.getSharedPreferences("game", MODE_PRIVATE).apply {
+
+            val sound = getInt(PREF_SOUND, 100)
+            val level = getInt(PREF_LEVEL, 1)
+            val rules = getInt(PREF_RULES, 7)
+
+            return SettingsActivity.SettingsInfo(sound, level, rules)
+        }
+    }
+
+    data class CellGameField(val row: Int, val column: Int)
+
+    private fun isEmptyField(row: Int, column: Int): Boolean {
         return gameField[row][column] == " "
     }
 
-    private fun makeStep(row: Int, column: Int, symbol: String){
+    private fun makeStep(row: Int, column: Int, symbol: String) {
         gameField[row][column] = symbol
 
         makeGameFieldUI("$row$column", symbol)
     }
 
-    private fun makeGameFieldUI(position: String, symbol: String){
+    private fun makeGameFieldUI(position: String, symbol: String) {
         val drawable = when (symbol) {
-            "X" -> R.drawable.ic_cross
-            "0" -> R.drawable.ic_zero
+            PLAYER_SYMBOL -> R.drawable.ic_cross
+            BOT_SYMBOL -> R.drawable.ic_zero
             else -> return
         }
 
-        when(position){
+        when (position) {
             "00" -> binding.cell11.setImageResource(drawable)
             "01" -> binding.cell12.setImageResource(drawable)
             "02" -> binding.cell13.setImageResource(drawable)
@@ -214,69 +391,92 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkWin(x: Int, y: Int, symbol: String): PlayerInfo{
+    private fun checkGameField(x: Int, y: Int, symbol: String): Boolean {
         var col = 0
         var row = 0
         var diag = 0
-        var rdiag=0
+        var rdiag = 0
         val n = gameField.size
 
-        for(i in 0..2) {
-            if (gameField[x][i]==symbol)
+        for (i in 0..2) {
+            if (gameField[x][i] == symbol)
                 col++
-            if (gameField[i][y]==symbol)
+            if (gameField[i][y] == symbol)
                 row++
-            if (gameField[i][i]==symbol)
+            if (gameField[i][i] == symbol)
                 diag++
-            if (gameField[i][n - i - 1]==symbol)
+            if (gameField[i][n - i - 1] == symbol)
                 rdiag++
         }
 
-        return if (row == n || col == n || diag == n || rdiag == n)
-            PlayerInfo(true, symbol)
-        else
-            PlayerInfo(false, "")
+        val settings = getCurrentSettings()
+        return when (settings.rules) {
+            1 -> {
+                col == n
+            }
+            2 -> {
+                row == n
+            }
+            3 -> {
+                col == n || row == n
+            }
+            4 -> {
+                diag == n || rdiag == n
+            }
+            5 -> {
+                col == n || diag == n || rdiag == n
+            }
+            6 -> {
+                row == n || diag == n || rdiag == n
+            }
+            7 -> {
+                col == n || row == n || diag == n || rdiag == n
+            }
+            else -> {
+                false
+            }
+        }
     }
 
     private fun isFilledGameField(): Boolean {
         gameField.forEach { strings ->
-            if(strings.find { it == " " } != null)
+            if (strings.find { it == " " } != null)
                 return false
         }
         return true
     }
 
-    private fun showGameStatus(status: Int){
+    private fun showGameStatus(status: Int) {
         binding.chronometer.stop()
 
-        val fbDialogue = Dialog(this@GameActivity, R.style.Theme_MyTickTacToe)
-        fbDialogue.window?.setBackgroundDrawable(ColorDrawable(Color.argb(50, 0, 0, 0)))
-        fbDialogue.setContentView(R.layout.dialog_popup_status_game)
-        fbDialogue.setCancelable(true)
+        val dialog = Dialog(this@GameActivity, R.style.Theme_MyTickTacToe)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.argb(50, 0, 0, 0)))
+        dialog.setContentView(R.layout.dialog_popup_status_game)
+        dialog.setCancelable(true)
 
         when (status) {
             STATUS_WIN_BOT -> {
-                fbDialogue.findViewById<TextView>(R.id.dialog_text).text = "Вы проиграли!"
-                fbDialogue.findViewById<ImageView>(R.id.dialog_image)
+                dialog.findViewById<TextView>(R.id.dialog_text).text = "Вы проиграли!"
+                dialog.findViewById<ImageView>(R.id.dialog_image)
                     .setImageResource(R.drawable.status_lose)
             }
             STATUS_WIN_PLAYER -> {
-                fbDialogue.findViewById<TextView>(R.id.dialog_text).text = "Вы выиграли!"
-                fbDialogue.findViewById<ImageView>(R.id.dialog_image)
+                dialog.findViewById<TextView>(R.id.dialog_text).text = "Вы выиграли!"
+                dialog.findViewById<ImageView>(R.id.dialog_image)
                     .setImageResource(R.drawable.status_win)
             }
             STATUS_DRAW -> {
-                fbDialogue.findViewById<TextView>(R.id.dialog_text).text = "Ничья!"
-                fbDialogue.findViewById<ImageView>(R.id.dialog_image)
+                dialog.findViewById<TextView>(R.id.dialog_text).text = "Ничья!"
+                dialog.findViewById<ImageView>(R.id.dialog_image)
                     .setImageResource(R.drawable.status_draw)
             }
         }
 
-        fbDialogue.findViewById<TextView>(R.id.dialog_ok).setOnClickListener {
-            fbDialogue.hide()
+        dialog.findViewById<TextView>(R.id.dialog_ok).setOnClickListener {
+            dialog.hide()
             onBackPressed()
         }
-        fbDialogue.show()
+        dialog.show()
     }
 
     private fun showPopupMenu() {
@@ -284,35 +484,41 @@ class GameActivity : AppCompatActivity() {
 
         val elapsedMillis = SystemClock.elapsedRealtime() - binding.chronometer.base
 
-        val fbDialogue = Dialog(this@GameActivity, R.style.Theme_MyTickTacToe)
-        fbDialogue.window?.setBackgroundDrawable(ColorDrawable(Color.argb(50, 0, 0, 0)))
-        fbDialogue.setContentView(R.layout.dialog_popup_menu)
-        fbDialogue.setCancelable(true)
+        val dialog = Dialog(this@GameActivity, R.style.Theme_MyTickTacToe)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.argb(50, 0, 0, 0)))
+        dialog.setContentView(R.layout.dialog_popup_menu)
+        dialog.setCancelable(true)
 
-        fbDialogue.findViewById<TextView>(R.id.dialog_continue).setOnClickListener {
-            fbDialogue.hide()
+        dialog.findViewById<TextView>(R.id.dialog_continue).setOnClickListener {
+            dialog.hide()
             binding.chronometer.base = SystemClock.elapsedRealtime() - elapsedMillis
             binding.chronometer.start()
         }
-        fbDialogue.findViewById<TextView>(R.id.dialog_settings).setOnClickListener {
-            fbDialogue.hide()
+        dialog.findViewById<TextView>(R.id.dialog_settings).setOnClickListener {
+            dialog.hide()
             val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
+            startActivityForResult(intent, POPUP_MENU)
         }
-        fbDialogue.findViewById<TextView>(R.id.dialog_exit).setOnClickListener {
+        dialog.findViewById<TextView>(R.id.dialog_exit).setOnClickListener {
             saveGame(elapsedMillis, convertGameFieldToString())
-            fbDialogue.hide()
+            dialog.hide()
             onBackPressed()
         }
 
-        fbDialogue.show()
+        dialog.show()
     }
-
-    data class PlayerInfo(val status: Boolean, val side: String)
 
     companion object {
         const val STATUS_WIN_PLAYER = 1
         const val STATUS_WIN_BOT = 2
         const val STATUS_DRAW = 3
+        const val POPUP_MENU = 235
+
+        val scores = hashMapOf(
+            Pair(STATUS_WIN_PLAYER, -1.0), Pair(STATUS_WIN_BOT, 1.0), Pair(STATUS_DRAW, 0.0)
+        )
+
+        const val PLAYER_SYMBOL = "X"
+        const val BOT_SYMBOL = "0"
     }
 }
