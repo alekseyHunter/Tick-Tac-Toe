@@ -86,7 +86,6 @@
             android:layout_marginEnd="32dp"
             android:progress="30"
             android:progressDrawable="@drawable/style_seekbar"
-            android:splitTrack="false"
             android:thumb="@drawable/ic_thumb"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

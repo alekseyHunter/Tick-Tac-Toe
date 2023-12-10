@@ -7,9 +7,11 @@ import android.graphics.drawable.ColorDrawable
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.SystemClock
+import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import my.tick.tack.toe.databinding.ActivityGameBinding
 
@@ -20,6 +22,20 @@ class GameActivity : AppCompatActivity() {
     private lateinit var gameField: Array<Array<String>>
 
     private lateinit var mediaPlayer: MediaPlayer
+
+    private val result =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == RESULT_OK) {
+                mediaPlayer = MediaPlayer.create(this, R.raw.test)
+                mediaPlayer.isLooping = true
+                val settingsInfo = getCurrentSettings()
+                setVolumeMediaPlayer(settingsInfo.sound)
+
+                binding.chronometer.start()
+                mediaPlayer.start()
+            }
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,22 +116,7 @@ class GameActivity : AppCompatActivity() {
         mediaPlayer.release()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == POPUP_MENU) {
-            if (resultCode == RESULT_OK) {
-                mediaPlayer = MediaPlayer.create(this, R.raw.test)
-                mediaPlayer.isLooping = true
-                val settingsInfo = getCurrentSettings()
-                setVolumeMediaPlayer(settingsInfo.sound)
-
-                binding.chronometer.start()
-                mediaPlayer.start()
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    private fun setVolumeMediaPlayer(soundValue: Int){
+    private fun setVolumeMediaPlayer(soundValue: Int) {
         val volume = soundValue / 100.0
         mediaPlayer.setVolume(volume.toFloat(), volume.toFloat())
     }
@@ -414,24 +415,31 @@ class GameActivity : AppCompatActivity() {
             1 -> {
                 col == n
             }
+
             2 -> {
                 row == n
             }
+
             3 -> {
                 col == n || row == n
             }
+
             4 -> {
                 diag == n || rdiag == n
             }
+
             5 -> {
                 col == n || diag == n || rdiag == n
             }
+
             6 -> {
                 row == n || diag == n || rdiag == n
             }
+
             7 -> {
                 col == n || row == n || diag == n || rdiag == n
             }
+
             else -> {
                 false
             }
@@ -460,11 +468,13 @@ class GameActivity : AppCompatActivity() {
                 dialog.findViewById<ImageView>(R.id.dialog_image)
                     .setImageResource(R.drawable.status_lose)
             }
+
             STATUS_WIN_PLAYER -> {
                 dialog.findViewById<TextView>(R.id.dialog_text).text = "Вы выиграли!"
                 dialog.findViewById<ImageView>(R.id.dialog_image)
                     .setImageResource(R.drawable.status_win)
             }
+
             STATUS_DRAW -> {
                 dialog.findViewById<TextView>(R.id.dialog_text).text = "Ничья!"
                 dialog.findViewById<ImageView>(R.id.dialog_image)
@@ -497,7 +507,7 @@ class GameActivity : AppCompatActivity() {
         dialog.findViewById<TextView>(R.id.dialog_settings).setOnClickListener {
             dialog.hide()
             val intent = Intent(this, SettingsActivity::class.java)
-            startActivityForResult(intent, POPUP_MENU)
+            result.launch(intent)
         }
         dialog.findViewById<TextView>(R.id.dialog_exit).setOnClickListener {
             saveGame(elapsedMillis, convertGameFieldToString())
