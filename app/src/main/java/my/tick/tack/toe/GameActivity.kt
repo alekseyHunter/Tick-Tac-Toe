@@ -1,4 +1,4 @@
-package my.tick.tack.toe
+package my.tick_tac_toe
 
 import android.app.Dialog
 import android.content.Intent
@@ -13,7 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import my.tick.tack.toe.databinding.ActivityGameBinding
+import my.tick_tac_toe.databinding.ActivityGameBinding
 
 
 class GameActivity : AppCompatActivity() {
@@ -43,7 +43,7 @@ class GameActivity : AppCompatActivity() {
         binding = ActivityGameBinding.inflate(layoutInflater)
 
         binding.toGameClose.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         binding.toPopupMenu.setOnClickListener {

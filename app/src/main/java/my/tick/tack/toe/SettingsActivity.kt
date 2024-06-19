@@ -1,11 +1,11 @@
-package my.tick.tack.toe
+package my.tick_tac_toe
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import androidx.core.view.isVisible
-import my.tick.tack.toe.databinding.ActivitySettingsBinding
+import my.tick_tac_toe.databinding.ActivitySettingsBinding
 
 const val PREF_SOUND = "my.tick_tac_toe.SOUND"
 const val PREF_LEVEL = "my.tick_tac_toe.LEVEL"

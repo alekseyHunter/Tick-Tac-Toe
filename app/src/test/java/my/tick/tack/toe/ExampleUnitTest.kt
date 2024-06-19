@@ -1,4 +1,4 @@
-package my.tick.tack.toe
+package my.tick_tac_toe
 
 import org.junit.Test
 
