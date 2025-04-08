@@ -1,22 +1,22 @@
-package my.tick_tac_toe
+package ru.mygames.tictactoe
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
-import androidx.core.view.isVisible
-import my.tick_tac_toe.databinding.ActivitySettingsBinding
+import androidx.activity.OnBackPressedDispatcher
+import ru.mygames.tictactoe.databinding.ActivitySettingsBinding
 
-const val PREF_SOUND = "my.tick_tac_toe.SOUND"
-const val PREF_LEVEL = "my.tick_tac_toe.LEVEL"
-const val PREF_RULES = "my.tick_tac_toe.RULES"
+const val PREF_SOUND = "ru.mygames.tictactoe.SOUND"
+const val PREF_LEVEL = "ru.mygames.tictactoe.LEVEL"
+const val PREF_RULES = "ru.mygames.tictactoe.RULES"
 
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var settingsBinding: ActivitySettingsBinding
 
     private var currentLevel : Int = 0
-    private var currentVolumeSound: Int = 0
+    private var currentSoundVolume: Int = 0
     private var currentRules: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +27,7 @@ class SettingsActivity : AppCompatActivity() {
         val currentSettings = getCurrentSettings()
 
         currentLevel = currentSettings.level
-        currentVolumeSound = currentSettings.sound
+        currentSoundVolume = currentSettings.sound
         currentRules = currentSettings.rules
 
         if(currentLevel == 0){
@@ -37,7 +37,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         settingsBinding.infoLevel.text = resources.getStringArray(R.array.level)[currentLevel]
-        settingsBinding.soundBar.progress = currentVolumeSound
+        settingsBinding.soundBar.progress = currentSoundVolume
 
         when(currentSettings.rules){
             1 -> settingsBinding.checkBoxHorizontal.isChecked = true
@@ -90,13 +90,13 @@ class SettingsActivity : AppCompatActivity() {
 
         settingsBinding.soundBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(p0: SeekBar?, progress: Int, p2: Boolean) {
-                currentVolumeSound = progress
+                currentSoundVolume = progress
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {}
 
             override fun onStopTrackingTouch(p0: SeekBar?) {
-                updateVolumeSound(currentVolumeSound)
+                updateVolumeSound(currentSoundVolume)
             }
 
         })
@@ -133,7 +133,7 @@ class SettingsActivity : AppCompatActivity() {
 
         settingsBinding.toBack.setOnClickListener {
             setResult(RESULT_OK)
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         setContentView(settingsBinding.root)
@@ -163,16 +163,16 @@ class SettingsActivity : AppCompatActivity() {
         setResult(RESULT_OK)
     }
 
-    private fun getCurrentSettings(): SettingsInfo {
+    private fun getCurrentSettings(): GameSettings {
         this.getSharedPreferences("game", MODE_PRIVATE).apply {
 
             val sound = getInt(PREF_SOUND, 100)
             val level = getInt(PREF_LEVEL, 1)
             val rules = getInt(PREF_RULES, 7)
 
-            return SettingsInfo(sound, level, rules)
+            return GameSettings(sound, level, rules)
         }
     }
 
-    data class SettingsInfo(val sound: Int, val level: Int, val rules: Int)
+    data class GameSettings(val sound: Int, val level: Int, val rules: Int)
 }

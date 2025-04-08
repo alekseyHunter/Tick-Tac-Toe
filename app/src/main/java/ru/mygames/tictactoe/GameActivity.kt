@@ -1,19 +1,18 @@
-package my.tick_tac_toe
+package ru.mygames.tictactoe
 
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import my.tick_tac_toe.databinding.ActivityGameBinding
+import ru.mygames.tictactoe.databinding.ActivityGameBinding
 
 
 class GameActivity : AppCompatActivity() {
@@ -21,18 +20,18 @@ class GameActivity : AppCompatActivity() {
 
     private lateinit var gameField: Array<Array<String>>
 
-    private lateinit var mediaPlayer: MediaPlayer
+    //private lateinit var mediaPlayer: MediaPlayer
 
     private val result =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == RESULT_OK) {
-                mediaPlayer = MediaPlayer.create(this, R.raw.test)
-                mediaPlayer.isLooping = true
+                //mediaPlayer = MediaPlayer.create(this, R.raw.test)
+                //mediaPlayer.isLooping = true
                 val settingsInfo = getCurrentSettings()
                 setVolumeMediaPlayer(settingsInfo.sound)
 
                 binding.chronometer.start()
-                mediaPlayer.start()
+                //mediaPlayer.start()
             }
         }
 
@@ -41,6 +40,8 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = ActivityGameBinding.inflate(layoutInflater)
+
+
 
         binding.toGameClose.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
@@ -97,28 +98,28 @@ class GameActivity : AppCompatActivity() {
             initGameField()
         }
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.test)
-        mediaPlayer.isLooping = true
+        //mediaPlayer = MediaPlayer.create(this, R.raw.test)
+        //mediaPlayer.isLooping = true
         val settingsInfo = getCurrentSettings()
         setVolumeMediaPlayer(settingsInfo.sound)
 
         binding.chronometer.start()
-        mediaPlayer.start()
+        //mediaPlayer.start()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer.release()
+        //mediaPlayer.release()
     }
 
     override fun onStop() {
         super.onStop()
-        mediaPlayer.release()
+        //mediaPlayer.release()
     }
 
     private fun setVolumeMediaPlayer(soundValue: Int) {
         val volume = soundValue / 100.0
-        mediaPlayer.setVolume(volume.toFloat(), volume.toFloat())
+       // mediaPlayer.setVolume(volume.toFloat(), volume.toFloat())
     }
 
     private fun restartGame(time: Long, gameField: String) {
@@ -155,15 +156,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun initGameField() {
-        gameField = arrayOf()
-
-        for (i in 0..2) {
-            var array = arrayOf<String>()
-            for (j in 0..2) {
-                array += " "
-            }
-            gameField += array
-        }
+        gameField = Array (3) { Array(3) { EMPTY_SYMBOL } }
     }
 
     private fun makeStepToUser(row: Int, column: Int) {
@@ -216,14 +209,14 @@ class GameActivity : AppCompatActivity() {
         var bestScore = Double.NEGATIVE_INFINITY
         var moveCell = CellGameField(0, 0)
 
-        var board = gameField.map { it.clone() }.toTypedArray()
+        val board = gameField.map { it.clone() }.toTypedArray()
 
         board.forEachIndexed { indexRow, columns ->
             columns.forEachIndexed { indexColumn, cell ->
-                if (board[indexRow][indexColumn] == " ") {
+                if (board[indexRow][indexColumn] == EMPTY_SYMBOL) {
                     board[indexRow][indexColumn] = BOT_SYMBOL
                     val score = minimax(board, false)
-                    board[indexRow][indexColumn] = " "
+                    board[indexRow][indexColumn] = EMPTY_SYMBOL
                     if (score > bestScore) {
                         bestScore = score
                         moveCell = CellGameField(indexRow, indexColumn)
@@ -245,10 +238,10 @@ class GameActivity : AppCompatActivity() {
 
         board.forEachIndexed { indexRow, columns ->
             columns.forEachIndexed { indexColumn, cell ->
-                if (board[indexRow][indexColumn] == " ") {
+                if (board[indexRow][indexColumn] == EMPTY_SYMBOL) {
                     board[indexRow][indexColumn] = BOT_SYMBOL
                     val score = minimax(board, false)
-                    board[indexRow][indexColumn] = " "
+                    board[indexRow][indexColumn] = EMPTY_SYMBOL
                     if (score > bestScore) {
                         bestScore = score
                         moveCell = CellGameField(indexRow, indexColumn)
@@ -272,10 +265,10 @@ class GameActivity : AppCompatActivity() {
             var bestScore = Double.NEGATIVE_INFINITY
             board.forEachIndexed { indexRow, columns ->
                 columns.forEachIndexed { indexColumn, cell ->
-                    if (board[indexRow][indexColumn] == " ") {
+                    if (board[indexRow][indexColumn] == EMPTY_SYMBOL) {
                         board[indexRow][indexColumn] = BOT_SYMBOL
                         val score = minimax(board, false)
-                        board[indexRow][indexColumn] = " "
+                        board[indexRow][indexColumn] = EMPTY_SYMBOL
                         if (score > bestScore) {
                             bestScore = score
                         }
@@ -287,10 +280,10 @@ class GameActivity : AppCompatActivity() {
             var bestScore = Double.POSITIVE_INFINITY
             board.forEachIndexed { indexRow, columns ->
                 columns.forEachIndexed { indexColumn, cell ->
-                    if (board[indexRow][indexColumn] == " ") {
+                    if (board[indexRow][indexColumn] == EMPTY_SYMBOL) {
                         board[indexRow][indexColumn] = PLAYER_SYMBOL
                         val score = minimax(board, true)
-                        board[indexRow][indexColumn] = " "
+                        board[indexRow][indexColumn] = EMPTY_SYMBOL
                         if (score < bestScore) {
                             bestScore = score
                         }
@@ -342,28 +335,28 @@ class GameActivity : AppCompatActivity() {
         }
 
         board.forEach {
-            if (it.find { it == " " } != null)
+            if (it.find { it == EMPTY_SYMBOL } != null)
                 return null
         }
 
         return STATUS_DRAW
     }
 
-    private fun getCurrentSettings(): SettingsActivity.SettingsInfo {
+    private fun getCurrentSettings(): SettingsActivity.GameSettings {
         this.getSharedPreferences("game", MODE_PRIVATE).apply {
 
             val sound = getInt(PREF_SOUND, 100)
             val level = getInt(PREF_LEVEL, 1)
             val rules = getInt(PREF_RULES, 7)
 
-            return SettingsActivity.SettingsInfo(sound, level, rules)
+            return SettingsActivity.GameSettings(sound, level, rules)
         }
     }
 
     data class CellGameField(val row: Int, val column: Int)
 
     private fun isEmptyField(row: Int, column: Int): Boolean {
-        return gameField[row][column] == " "
+        return gameField[row][column] == EMPTY_SYMBOL
     }
 
     private fun makeStep(row: Int, column: Int, symbol: String) {
@@ -448,7 +441,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun isFilledGameField(): Boolean {
         gameField.forEach { strings ->
-            if (strings.find { it == " " } != null)
+            if (strings.find { it == EMPTY_SYMBOL } != null)
                 return false
         }
         return true
@@ -484,7 +477,7 @@ class GameActivity : AppCompatActivity() {
 
         dialog.findViewById<TextView>(R.id.dialog_ok).setOnClickListener {
             dialog.hide()
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
         dialog.show()
     }
@@ -512,7 +505,7 @@ class GameActivity : AppCompatActivity() {
         dialog.findViewById<TextView>(R.id.dialog_exit).setOnClickListener {
             saveGame(elapsedMillis, convertGameFieldToString())
             dialog.hide()
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         dialog.show()
@@ -522,7 +515,6 @@ class GameActivity : AppCompatActivity() {
         const val STATUS_WIN_PLAYER = 1
         const val STATUS_WIN_BOT = 2
         const val STATUS_DRAW = 3
-        const val POPUP_MENU = 235
 
         val scores = hashMapOf(
             Pair(STATUS_WIN_PLAYER, -1.0), Pair(STATUS_WIN_BOT, 1.0), Pair(STATUS_DRAW, 0.0)
@@ -530,5 +522,6 @@ class GameActivity : AppCompatActivity() {
 
         const val PLAYER_SYMBOL = "X"
         const val BOT_SYMBOL = "0"
+        const val EMPTY_SYMBOL = " "
     }
 }
